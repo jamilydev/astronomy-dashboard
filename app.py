@@ -3,6 +3,10 @@ import plotly.graph_objects as go
 import pandas as pd
 import requests
 from datetime import datetime, timedelta
+import pytz
+
+# Configuração do fuso horário de Goiânia (UTC-3)
+GOIANIA_TZ = pytz.timezone('America/Sao_Paulo')
 
 # Configuração do Streamlit
 st.set_page_config(page_title="Dashboard Astronômico", layout="wide")
@@ -12,15 +16,15 @@ st.title("Dashboard Astronômico em Tempo Real")
 @st.cache_data(ttl=60)
 def fetch_astronomy_data():
     try:
-        # Simulação de dados (substitua por API real, ex.: SpaceWeatherLive ou NASA)
-        now = datetime.utcnow()
+        # Usar horário de Goiânia
+        now = datetime.now(GOIANIA_TZ)
         solar_data = [
             {"time": (now - timedelta(hours=23-i)).strftime("%H:%M"), "xray_flux": 0.0001 * (i % 5 + 1 + (0.1 * i))}
             for i in range(24)
         ]
         return {
-            "hubble": {"target": "NGC 1234 (Galáxia Espiral)", "time": now.strftime("%Y-%m-%d %H:%M:%S")},
-            "webb": {"target": "Cosmos Redshift 7", "time": now.strftime("%Y-%m-%d %H:%M:%S")},
+            "hubble": {"target": "NGC 1234 (Galáxia Espiral)", "time": now.strftime("%Y-%m-%d %H:%M:%S %Z")},
+            "webb": {"target": "Cosmos Redshift 7", "time": now.strftime("%Y-%m-%d %H:%M:%S %Z")},
             "solar_activity": solar_data
         }
     except Exception as e:
@@ -40,7 +44,7 @@ def plot_solar_activity(solar_data):
     ))
     fig.update_layout(
         title="Atividade Solar (Últimas 24 Horas)",
-        xaxis_title="Hora (UTC)",
+        xaxis_title="Hora (Goiânia, UTC-3)",
         yaxis_title="Fluxo de Raios X (W/m²)",
         template="plotly_dark",
         height=400
@@ -64,7 +68,7 @@ if st.button("Atualizar Dados"):
         fig = plot_solar_activity(data["solar_activity"])
         st.plotly_chart(fig, use_container_width=True)
         
-        st.markdown(f"**Última atualização:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        st.markdown(f"**Última atualização:** {datetime.now(GOIANIA_TZ).strftime('%Y-%m-%d %H:%M:%S %Z')}")
     else:
         st.error("Falha ao carregar dados. Tente novamente.")
 else:
