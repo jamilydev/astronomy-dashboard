@@ -9,7 +9,7 @@ import pytz
 GOIANIA_TZ = pytz.timezone('America/Sao_Paulo')
 
 # Configuração da NASA API
-NASA_API_KEY = "SUA_CHAVE_AQUI"  # Substitua por sua chave da NASA API
+NASA_API_KEY = "snngNMZnw1hqXpKEndt1Ggodg7Ld3FgthI9XlwpJ"  # Substitua por sua chave da NASA API
 
 # Configuração do Streamlit
 st.set_page_config(page_title="Dashboard Astronômico", layout="wide")
