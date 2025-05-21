@@ -8,15 +8,42 @@ import pytz
 # Configuração do fuso horário de Goiânia (UTC-3)
 GOIANIA_TZ = pytz.timezone('America/Sao_Paulo')
 
+# Configuração da NASA API
+NASA_API_KEY = "SUA_CHAVE_AQUI"  # Substitua por sua chave da NASA API
+
 # Configuração do Streamlit
 st.set_page_config(page_title="Dashboard Astronômico", layout="wide")
 st.title("Dashboard Astronômico em Tempo Real")
 
-# Função para buscar dados (simulada ou real)
+# Função para buscar dados (NASA APOD + simulados)
 @st.cache_data(ttl=60)
 def fetch_astronomy_data():
     try:
+        # Buscar dados da NASA APOD
+        response = requests.get(f"https://api.nasa.gov/planetary/apod?api_key={NASA_API_KEY}")
+        response.raise_for_status()  # Levanta erro para status != 200
+        apod = response.json()
+
         # Usar horário de Goiânia
+        now = datetime.now(GOIANIA_TZ)
+        
+        # Dados simulados para atividade solar
+        solar_data = [
+            {"time": (now - timedelta(hours=23-i)).strftime("%H:%M"), "xray_flux": 0.0001 * (i % 5 + 1 + (0.1 * i))}
+            for i in range(24)
+        ]
+        
+        return {
+            "hubble": {
+                "target": apod.get("title", "NGC 1234 (Galáxia Espiral)"),  # Título da imagem do dia
+                "time": apod.get("date", now.strftime("%Y-%m-%d")) + " " + now.strftime("%H:%M:%S %Z")
+            },
+            "webb": {"target": "Cosmos Redshift 7", "time": now.strftime("%Y-%m-%d %H:%M:%S %Z")},
+            "solar_activity": solar_data
+        }
+    except requests.exceptions.RequestException as e:
+        st.error(f"Erro ao buscar dados da NASA API: {e}")
+        # Dados de fallback
         now = datetime.now(GOIANIA_TZ)
         solar_data = [
             {"time": (now - timedelta(hours=23-i)).strftime("%H:%M"), "xray_flux": 0.0001 * (i % 5 + 1 + (0.1 * i))}
@@ -27,9 +54,6 @@ def fetch_astronomy_data():
             "webb": {"target": "Cosmos Redshift 7", "time": now.strftime("%Y-%m-%d %H:%M:%S %Z")},
             "solar_activity": solar_data
         }
-    except Exception as e:
-        st.error(f"Erro ao buscar dados: {e}")
-        return None
 
 # Função para criar o gráfico de atividade solar
 def plot_solar_activity(solar_data):
